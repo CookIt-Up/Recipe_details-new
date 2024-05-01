@@ -15,6 +15,7 @@ import 'package:flutter/src/rendering/box.dart';
 import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
+import 'uploader_profile.dart';
 
 class RecipeDetailsPage extends StatefulWidget {
   final DocumentSnapshot recipeSnapshot;
@@ -335,15 +336,16 @@ class _VideoWidgetState extends State<VideoWidget> {
   }
 }
 
+
 class UploaderDetailsWidget extends StatelessWidget {
-  final DocumentSnapshot recipeSnapshot;
+  final DocumentSnapshot<Object?> recipeSnapshot;
 
   const UploaderDetailsWidget({Key? key, required this.recipeSnapshot})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<DocumentSnapshot>(
+    return FutureBuilder<DocumentSnapshot<Object?>>(
       future: FirebaseFirestore.instance
           .collection('users')
           .doc(recipeSnapshot['userid'])
@@ -362,49 +364,59 @@ class UploaderDetailsWidget extends StatelessWidget {
           return Text('User not found');
         }
 
-        var userData = snapshot.data!;
+        var userData = snapshot.data!.data() as Map<String, dynamic>;
         String username = userData['name'] ?? 'Unknown User';
         String profilePicture = userData['profilepic'] ?? '';
 
-        return Row(
-          children: [
-            FutureBuilder(
-              future: FirebaseStorageService.getImageUrl(profilePicture),
-              builder: (context, urlSnapshot) {
-                if (urlSnapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator(
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(Color(0xFFD1E7D2)),
-                    strokeWidth: 2.0,
-                  );
-                } else if (urlSnapshot.hasError) {
-                  return Text('Error: ${urlSnapshot.error}');
-                } else {
-                  var url = urlSnapshot.data as String;
-                  return CircleAvatar(
-                    backgroundImage: NetworkImage(url),
-                  );
-                }
-              },
-            ),
-            SizedBox(width: 8),
-            Expanded(
-              child: Container(
-                constraints: BoxConstraints(
-                    maxWidth: 250), // Adjust the max width as needed
-                child: ListTile(
-                  title: Text(
-                    username,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [],
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => UploaderProfilePage(userData: userData),
+              ),
+            );
+          },
+          child: Row(
+            children: [
+              FutureBuilder(
+                future: FirebaseStorageService.getImageUrl(profilePicture),
+
+                builder: (context, urlSnapshot) {
+                  if (urlSnapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator(
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFD1E7D2)),
+                      strokeWidth: 2.0,
+                    );
+                  } else if (urlSnapshot.hasError) {
+                    return Text('Error: ${urlSnapshot.error}');
+                  } else {
+                    var url = urlSnapshot.data as String;
+                    return CircleAvatar(
+                      backgroundImage: NetworkImage(url),
+                    );
+                  }
+                },
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: Container(
+                  constraints: BoxConstraints(maxWidth: 250),
+                  child: ListTile(
+                    title: Text(
+                      username,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -682,118 +694,117 @@ class TabViewWidget extends StatelessWidget {
                     ),
                     SizedBox(height: 20),
                     Container(
-                      color: Color.fromRGBO(210, 231, 210, 100), // Set the color for the serving quantity box
-                      
+                      color: Color.fromRGBO(210, 231, 210,
+                          100), // Set the color for the serving quantity box
+
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             'Ingredients- $totalIngredients',
-                            
                             style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Color.fromARGB(255, 10, 7, 7)),
                           ),
-                          
                         ],
                       ),
                     ),
                     SizedBox(height: 20),
                     Container(
- decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10.0),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color.fromARGB(155, 117, 167, 126),
-                                offset: Offset(
-                                  5.0,
-                                  5.0,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color.fromARGB(155, 117, 167, 126),
+                            offset: Offset(
+                              5.0,
+                              5.0,
+                            ),
+                            blurRadius: 8.0,
+                            spreadRadius: 1.5,
+                          ), //BoxShadow
+                          BoxShadow(
+                            color: Color(0xFFD2E7D2),
+                            offset: Offset(0.0, 0.0),
+                            blurRadius: 0.0,
+                            spreadRadius: 0.0,
+                          ), //BoxShadow
+                        ],
+                        border: Border.all(color: Colors.transparent),
+                      ), // Set the color for the ingredient list box
+                      padding: EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Quantity for $servings Serving',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color.fromARGB(255, 21, 12, 12),
                                 ),
-                                blurRadius: 8.0,
-                                spreadRadius: 1.5,
-                              ), //BoxShadow
-                              BoxShadow(
-                                color: Color(0xFFD2E7D2),
-                                offset: Offset(0.0, 0.0),
-                                blurRadius: 0.0,
-                                spreadRadius: 0.0,
-                              ), //BoxShadow
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.remove),
+                                    onPressed: () {
+                                      if (servings > 1) {
+                                        updateServings(servings - 1);
+                                      }
+                                    },
+                                  ),
+                                  Text(
+                                    '|',
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.add),
+                                    onPressed: () {
+                                      updateServings(servings + 1);
+                                    },
+                                  ),
+                                ],
+                              ),
                             ],
-                            border: Border.all(color: Colors.transparent),
-                          ), // Set the color for the ingredient list box
-  padding: EdgeInsets.all(16.0),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Quantity for $servings Serving',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: const Color.fromARGB(255, 21, 12, 12),
-            ),
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: Icon(Icons.remove),
-                onPressed: () {
-                  if (servings > 1) {
-                    updateServings(servings - 1);
-                  }
-                },
-              ),
-              Text(
-                '|',
-                
-              ),
-              IconButton(
-                icon: Icon(Icons.add),
-                onPressed: () {
-                  updateServings(servings + 1);
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-      SizedBox(height: 20),
-      ListView.builder(
-        shrinkWrap: true,
-        itemCount: ingredients.length,
-        itemBuilder: (context, index) {
-          String name = ingredients[index].id;
-          String quantity = ingredients[index]['quantity'];
-          String unit = _getUnit(ingredients[index]);
-          String adjustedQuantity = _calculateAdjustedQuantity(quantity, servings);
+                          ),
+                          SizedBox(height: 20),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: ingredients.length,
+                            itemBuilder: (context, index) {
+                              String name = ingredients[index].id;
+                              String quantity = ingredients[index]['quantity'];
+                              String unit = _getUnit(ingredients[index]);
+                              String adjustedQuantity = _calculateAdjustedQuantity( quantity, servings);
 
-          return ListTile(
-            title: Text('$name : ${adjustedQuantity.toString()} $unit  '),
-            trailing: Checkbox(
-              value: isChecked[index] ?? false,
-              onChanged: (value) {
-                toggleCheckbox(index);
-                if (value == true) {
-                  // Add ingredient to selectedIngredients in Firestore
-                  _addIngredientToSelectedIngredients(name);
-                } else {
-                  // Remove ingredient from selectedIngredients in Firestore
-                  _removeIngredientFromSelectedIngredients(name);
-                }
-              },
-              activeColor: Colors.transparent,
-            ),
-          );
-        },
-      ),
-    ],
-  ),
-),
-
+                              return ListTile(
+                                title: Text(
+                                    '$name : ${adjustedQuantity.toString()} $unit  '),
+                                trailing: Checkbox(
+                                  value: isChecked[index] ?? false,
+                                  onChanged: (value) {
+                                    toggleCheckbox(index);
+                                    if (value == true) {
+                                      // Add ingredient to selectedIngredients in Firestore
+                                      _addIngredientToSelectedIngredients(name);
+                                    } else {
+                                      // Remove ingredient from selectedIngredients in Firestore
+                                      _removeIngredientFromSelectedIngredients(
+                                          name);
+                                    }
+                                  },
+                                  activeColor: Colors.transparent,
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 );
               },
@@ -937,80 +948,79 @@ class TabViewWidget extends StatelessWidget {
         String currentStep =
             steps.isNotEmpty ? steps[currentPageIndex]['description'] : '';
 
-       return Center(
-  child: Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Align(
-        alignment: Alignment.topLeft,
-        child: Text(
-          'Step ${currentPageIndex + 1}:',
-          style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
-        ),
-      ),
-      SizedBox(height: 10.0),
-      Row(
-        children: [
-          IconButton(
-            icon: Icon(Icons.arrow_back_ios),
-            onPressed: () {
-              if (currentPageIndex > 0) {
-                updateCurrentPageIndex(currentPageIndex - 1);
-              }
-            },
-          ),
-          Expanded(
-            child: SizedBox(
-              height: 300.0, // Set the desired height for the description box
-              child: Container(
-                padding: EdgeInsets.all(10.0),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color.fromARGB(155, 117, 167, 126),
-                      offset: Offset(
-                        2.0,
-                        5.0,
-                      ),
-                      blurRadius: 8.0,
-                      spreadRadius: 1.5,
-                    ), //BoxShadow
-                    BoxShadow(
-                      color: Color(0xFFD2E7D2),
-                      offset: Offset(0.0, 0.0),
-                      blurRadius: 0.0,
-                      spreadRadius: 0.0,
-                    ), //BoxShadow
-                  ],
-                  border: Border.all(color: Colors.transparent),
-                ),
-                child: Center(
-                  child: Text(
-                    currentStep,
-                    style: TextStyle(fontSize: 18.0),
-                  ),
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Align(
+                alignment: Alignment.topLeft,
+                child: Text(
+                  'Step ${currentPageIndex + 1}:',
+                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
                 ),
               ),
-            ),
+              SizedBox(height: 10.0),
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.arrow_back_ios),
+                    onPressed: () {
+                      if (currentPageIndex > 0) {
+                        updateCurrentPageIndex(currentPageIndex - 1);
+                      }
+                    },
+                  ),
+                  Expanded(
+                    child: SizedBox(
+                      height:
+                          300.0, // Set the desired height for the description box
+                      child: Container(
+                        padding: EdgeInsets.all(10.0),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10.0),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color.fromARGB(155, 117, 167, 126),
+                              offset: Offset(
+                                2.0,
+                                5.0,
+                              ),
+                              blurRadius: 8.0,
+                              spreadRadius: 1.5,
+                            ), //BoxShadow
+                            BoxShadow(
+                              color: Color(0xFFD2E7D2),
+                              offset: Offset(0.0, 0.0),
+                              blurRadius: 0.0,
+                              spreadRadius: 0.0,
+                            ), //BoxShadow
+                          ],
+                          border: Border.all(color: Colors.transparent),
+                        ),
+                        child: Center(
+                          child: Text(
+                            currentStep,
+                            style: TextStyle(fontSize: 18.0),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.arrow_forward_ios),
+                    onPressed: () {
+                      if (currentPageIndex < steps.length - 1) {
+                        updateCurrentPageIndex(currentPageIndex + 1);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              SizedBox(height: 20.0),
+            ],
           ),
-          IconButton(
-            icon: Icon(Icons.arrow_forward_ios),
-            onPressed: () {
-              if (currentPageIndex < steps.length - 1) {
-                updateCurrentPageIndex(currentPageIndex + 1);
-              }
-            },
-          ),
-        ],
-      ),
-      SizedBox(height: 20.0),
-    ],
-  ),
-);
-
-
+        );
       },
     );
   }
@@ -1028,8 +1038,8 @@ class TabViewWidget extends StatelessWidget {
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return CircularProgressIndicator(
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(Color.fromARGB(255, 209, 231, 210)),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                      Color.fromARGB(255, 209, 231, 210)),
                   strokeWidth: 2.0,
                 );
               }
@@ -1289,10 +1299,8 @@ Future<Map<String, dynamic>> fetchNutrientInfo(String recipeId) async {
         ingredientsSnapshot.docs.map((ingredient) {
       return {
         'name': ingredient.id,
-        'quantity': (ingredient.data() as Map<String, dynamic>)[
-            'quantity'], // Explicit cast to Map<String, dynamic>
-        'unit': (ingredient.data() as Map<String, dynamic>)[
-            'unit'] // Explicit cast to Map<String, dynamic>
+        'quantity': (ingredient.data() as Map<String, dynamic>)['quantity'], // Explicit cast to Map<String, dynamic>
+        'unit': (ingredient.data() as Map<String, dynamic>)['unit'] // Explicit cast to Map<String, dynamic>
       };
     }).toList();
 
