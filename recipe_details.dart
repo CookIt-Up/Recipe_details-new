@@ -15,7 +15,7 @@ import 'package:flutter/src/rendering/box.dart';
 import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
-import 'uploader_profile.dart';
+import 'package:cookitup/uploader_profile.dart';
 
 class RecipeDetailsPage extends StatefulWidget {
   final DocumentSnapshot recipeSnapshot;
@@ -62,53 +62,55 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
   }
 
   void _loadLikeStatus() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  String userId = _userEmail;
-  bool isLiked = prefs.getBool('$userId-${widget.recipeSnapshot.id}') ?? false;
-  setState(() {
-    _isLiked = isLiked;
-  });
-}
-
-void _loadSaveStatus() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  String userId = _userEmail;
-  bool isSaved = prefs.getBool('$userId-${widget.recipeSnapshot.id}') ?? false;
-  setState(() {
-    _isSaved = isSaved;
-  });
-}
-
- void _toggleSaveStatus() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  String userId = _userEmail;
-
-  setState(() {
-    _isSaved = !_isSaved;
-  });
-
-  await prefs.setBool('$userId-${widget.recipeSnapshot.id}', _isSaved);
-
-  if (_isSaved) {
-    // Add the recipe ID to the user's saved recipes collection
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('savedRecipes')
-        .doc(widget.recipeSnapshot.id)
-        .set({
-      'recipeId': widget.recipeSnapshot.id,
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String userId = _userEmail;
+    bool isLiked =
+        prefs.getBool('$userId-${widget.recipeSnapshot.id}') ?? false;
+    setState(() {
+      _isLiked = isLiked;
     });
-  } else {
-    // Remove the recipe ID from the user's saved recipes collection
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('savedRecipes')
-        .doc(widget.recipeSnapshot.id)
-        .delete();
   }
-}
+
+  void _loadSaveStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String userId = _userEmail;
+    bool isSaved =
+        prefs.getBool('$userId-${widget.recipeSnapshot.id}') ?? false;
+    setState(() {
+      _isSaved = isSaved;
+    });
+  }
+
+  void _toggleSaveStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String userId = _userEmail;
+
+    setState(() {
+      _isSaved = !_isSaved;
+    });
+
+    await prefs.setBool('$userId-${widget.recipeSnapshot.id}', _isSaved);
+
+    if (_isSaved) {
+      // Add the recipe ID to the user's saved recipes collection
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('savedRecipes')
+          .doc(widget.recipeSnapshot.id)
+          .set({
+        'recipeId': widget.recipeSnapshot.id,
+      });
+    } else {
+      // Remove the recipe ID from the user's saved recipes collection
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('savedRecipes')
+          .doc(widget.recipeSnapshot.id)
+          .delete();
+    }
+  }
 
   void toggleCheckbox(int index) {
     setState(() {
@@ -147,7 +149,7 @@ void _loadSaveStatus() async {
     );
 
     return Scaffold(
-      backgroundColor: Color(0xFFD1E7D2),
+      backgroundColor: const Color(0xFFD1E7D2),
       body: Stack(
         children: [
           ListView(
@@ -161,7 +163,7 @@ void _loadSaveStatus() async {
                       child: Text(
                         widget.recipeSnapshot[
                             'title'], // Display recipe title here
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
@@ -169,8 +171,8 @@ void _loadSaveStatus() async {
                     ),
                     IconButton(
                       icon: _isLiked
-                          ? Icon(Icons.thumb_up)
-                          : Icon(Icons.thumb_up_alt_outlined),
+                          ? const Icon(Icons.favorite,color: Colors.red)
+                          : const Icon(Icons.favorite_outline),
                       onPressed: () async {
                         setState(() {
                           _isLiked = !_isLiked;
@@ -195,12 +197,12 @@ void _loadSaveStatus() async {
                     ),
                     IconButton(
                       icon: _isSaved
-                          ? Icon(Icons.bookmark)
-                          : Icon(Icons.bookmark_border),
+                          ? const Icon(Icons.bookmark)
+                          : const Icon(Icons.bookmark_border),
                       onPressed: _toggleSaveStatus,
                     ),
                     IconButton(
-                      icon: Icon(Icons.share),
+                      icon: const Icon(Icons.share),
                       onPressed: () {
                         shareRecipe(context, widget.recipeSnapshot);
                       },
@@ -216,8 +218,8 @@ void _loadSaveStatus() async {
             top: MediaQuery.of(context).padding.top + 8.0,
             left: 8.0,
             child: IconButton(
-              icon: Icon(Icons.arrow_back),
-              color: Color.fromARGB(
+              icon: const Icon(Icons.arrow_back),
+              color: const Color.fromARGB(
                   255, 0, 0, 0), // Change the color of the arrow here
               onPressed: () {
                 Navigator.pop(context);
@@ -281,8 +283,10 @@ class _VideoWidgetState extends State<VideoWidget> {
 
   @override
   void dispose() {
+    _videoPlayerController.pause();
     _videoPlayerController.dispose();
     _chewieController.dispose();
+    _chewieController.pause();
     super.dispose();
   }
 
@@ -300,6 +304,7 @@ class _VideoWidgetState extends State<VideoWidget> {
         allowFullScreen: true,
         aspectRatio: 4 / 3,
         useRootNavigator: true,
+        
       );
       _videoPlayerController.addListener(() {
         if (_videoPlayerController.value.hasError) {
@@ -325,7 +330,7 @@ class _VideoWidgetState extends State<VideoWidget> {
   @override
   Widget build(BuildContext context) {
     return _isVideoLoading
-        ? AspectRatio(
+        ? const AspectRatio(
             aspectRatio: 4 / 3, // Set a default aspect ratio while loading
             child: Center(child: CircularProgressIndicator()),
           )
@@ -353,8 +358,8 @@ class UploaderDetailsWidget extends StatelessWidget {
           .get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFFD1E7D2)),
+          return const CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD1E7D2)),
             strokeWidth: 2.0,
           );
         }
@@ -362,19 +367,21 @@ class UploaderDetailsWidget extends StatelessWidget {
           return Text('Error: ${snapshot.error}');
         }
         if (!snapshot.hasData || snapshot.data == null) {
-          return Text('User not found');
+          return const Text('User not found');
         }
 
         var userData = snapshot.data!.data() as Map<String, dynamic>;
         String username = userData['name'] ?? 'Unknown User';
         String profilePicture = userData['profilepic'] ?? '';
+        //String email=userData['email']?? '';
 
         return GestureDetector(
           onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => UploaderProfilePage(userData: userData),
+                builder: (context) =>
+                    UploaderProfilePage(email: recipeSnapshot['userid']),
               ),
             );
           },
@@ -384,7 +391,7 @@ class UploaderDetailsWidget extends StatelessWidget {
                 future: FirebaseStorageService.getImageUrl(profilePicture),
                 builder: (context, urlSnapshot) {
                   if (urlSnapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator(
+                    return const CircularProgressIndicator(
                       valueColor:
                           AlwaysStoppedAnimation<Color>(Color(0xFFD1E7D2)),
                       strokeWidth: 2.0,
@@ -399,16 +406,16 @@ class UploaderDetailsWidget extends StatelessWidget {
                   }
                 },
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Expanded(
                 child: Container(
-                  constraints: BoxConstraints(maxWidth: 250),
+                  constraints: const BoxConstraints(maxWidth: 250),
                   child: ListTile(
                     title: Text(
                       username,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    trailing: Row(
+                    trailing: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [],
                     ),
@@ -451,14 +458,15 @@ class TabViewWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            margin: EdgeInsets.symmetric(horizontal: 8.0), // Adjust as needed
-            padding: EdgeInsets.symmetric(horizontal: 8.0),
+            margin:
+                const EdgeInsets.symmetric(horizontal: 6.0), // Adjust as needed
+            padding: const EdgeInsets.symmetric(horizontal: 6.0),
             decoration: BoxDecoration(
               color: Colors.transparent, // Change color if needed
               borderRadius:
                   BorderRadius.circular(10.0), // Optional: add rounded corners
             ),
-            child: TabBar(
+            child: const TabBar(
               tabs: [
                 Tab(text: 'Ingredients'),
                 Tab(text: 'Start Cook'),
@@ -469,8 +477,8 @@ class TabViewWidget extends StatelessWidget {
           SizedBox(
             height: 400,
             child: Container(
-              margin:
-                  EdgeInsets.symmetric(horizontal: 10.0), // Adjust as needed
+              margin: const EdgeInsets.symmetric(
+                  horizontal: 10.0), // Adjust as needed
               child: TabBarView(
                 children: [
                   _buildIngredientsTab(),
@@ -485,42 +493,42 @@ class TabViewWidget extends StatelessWidget {
     );
   }
 
+  Widget _buildIngredientsTab() {
+    final recipeSnapshot = this.recipeSnapshot;
+    Future<Map<String, dynamic>> nutrientInfoFuture =
+        fetchNutrientInfo(recipeSnapshot.id);
 
-Widget _buildIngredientsTab() {
-  final recipeSnapshot = this.recipeSnapshot;
-  Future<Map<String, dynamic>> nutrientInfoFuture = fetchNutrientInfo(recipeSnapshot.id);
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(13.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('recipe')
+                  .doc(recipeSnapshot.id)
+                  .collection('ingredients')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                }
+                if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Text('No ingredients found');
+                }
 
-  return SingleChildScrollView(
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('recipe')
-                .doc(recipeSnapshot.id)
-                .collection('ingredients')
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
-              }
-              if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}');
-              }
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return Text('No ingredients found');
-              }
+                List<QueryDocumentSnapshot> ingredients = snapshot.data!.docs;
+                int totalIngredients = ingredients.length;
+                num originalServings = recipeSnapshot['serving'];
 
-              List<QueryDocumentSnapshot> ingredients = snapshot.data!.docs;
-              int totalIngredients = ingredients.length;
-              num originalServings = recipeSnapshot['serving'];
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    /*RichText(
                     text: TextSpan(
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
                       children: <TextSpan>[
@@ -528,349 +536,360 @@ Widget _buildIngredientsTab() {
                         TextSpan(text: '(for $originalServings serving)', style: TextStyle(fontSize: 14, color: const Color.fromARGB(255, 75, 74, 74))),
                       ],
                     ),
-                  ),
+                  ),*/
 
-                  SizedBox(height: 10),
-                  FutureBuilder<Map<String, dynamic>>(
-                    future: nutrientInfoFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState ==
-                          ConnectionState.waiting) {
-                        return Text('Fetching nutrient info... ');
-                      }
-                      if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      }
-                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return Text('No nutrient info found');
-                      }
+                    const SizedBox(height: 10),
+                    FutureBuilder<Map<String, dynamic>>(
+                      future: nutrientInfoFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Text('Fetching nutrient info... ');
+                        }
+                        if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        }
+                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return const Text('No nutrient info found');
+                        }
 
-                      Map<String, dynamic> nutrientInfo = snapshot.data!;
-                      double caloriesPer100g =
-                          nutrientInfo['ENERC_KCAL']?['quantity'] ?? 0.0;
-                      double servingSize =
-                          100.0; // Example serving size in grams, adjust as needed
-                      double caloriesPerServing = calculateCaloriesPerServing(
-                          caloriesPer100g, servingSize);
-                      return Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10.0),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color.fromARGB(155, 117, 167, 126),
-                              offset: Offset(
-                                5.0,
-                                5.0,
-                              ),
-                              blurRadius: 8.0,
-                              spreadRadius: 1.5,
-                            ), //BoxShadow
-                            BoxShadow(
-                              color: Color(0xFFD2E7D2),
-                              offset: Offset(0.0, 0.0),
-                              blurRadius: 0.0,
-                              spreadRadius: 0.0,
-                            ), //BoxShadow
-                          ],
-                          border: Border.all(color: Colors.transparent),
-                        ),
-                        child: Theme(
-                          data: ThemeData(
-                            dividerColor: Colors
-                                .transparent, // Remove the divider color
-                          ),
-                          child: ExpansionTile(
-                            tilePadding: EdgeInsets
-                                .zero, // Remove the default tile padding
-                            title: Text(
-                              '  Calories: $caloriesPerServing kcal',
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            trailing: Icon(Icons.arrow_drop_down),
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0),
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    ListView(
-                                      shrinkWrap: true,
-                                      children: [
-                                        ListTile(
-                                          contentPadding: EdgeInsets.zero,
-                                          dense: true,
-                                          visualDensity: VisualDensity(
-                                              horizontal: -4,
-                                              vertical:
-                                                  -4), // Decrease the spacing
-                                          leading: Icon(
-                                              Icons.fiber_manual_record,
-                                              color: const Color.fromARGB(
-                                                  255, 84, 88, 84),
-                                              size: 10.0),
-                                          title: Text(
-                                              'Fat: ${nutrientInfo['FAT']?['quantity']?.toStringAsFixed(2) ?? 'N/A'} ${nutrientInfo['FAT']?['unit'] ?? ''}'),
-                                        ),
-                                        ListTile(
-                                          contentPadding: EdgeInsets.zero,
-                                          dense: true,
-                                          visualDensity: VisualDensity(
-                                              horizontal: -4,
-                                              vertical:
-                                                  -4), // Decrease the spacing
-                                          leading: Icon(
-                                              Icons.fiber_manual_record,
-                                              color: const Color.fromARGB(
-                                                  255, 84, 88, 84),
-                                              size: 10.0),
-                                          title: Text(
-                                              'Sugar: ${nutrientInfo['SUGAR']?['quantity']?.toStringAsFixed(2) ?? 'N/A'} ${nutrientInfo['SUGAR']?['unit'] ?? ''}'),
-                                        ),
-                                        ListTile(
-                                          contentPadding: EdgeInsets.zero,
-                                          dense: true,
-                                          visualDensity: VisualDensity(
-                                              horizontal: -4,
-                                              vertical:
-                                                  -4), // Decrease the spacing
-                                          leading: Icon(
-                                              Icons.fiber_manual_record,
-                                              color: const Color.fromARGB(
-                                                  255, 84, 88, 84),
-                                              size: 10.0),
-                                          title: Text(
-                                              'Carbohydrate: ${nutrientInfo['CHOCDF.net']?['quantity']?.toStringAsFixed(2) ?? 'N/A'} ${nutrientInfo['CHOCDF.net']?['unit'] ?? ''}'),
-                                        ),
-                                        ListTile(
-                                          contentPadding: EdgeInsets.zero,
-                                          dense: true,
-                                          visualDensity: VisualDensity(
-                                              horizontal: -4,
-                                              vertical:
-                                                  -4), // Decrease the spacing
-                                          leading: Icon(
-                                              Icons.fiber_manual_record,
-                                              color: const Color.fromARGB(
-                                                  255, 84, 88, 84),
-                                              size: 10.0),
-                                          title: Text(
-                                              'Fiber: ${nutrientInfo['FIBTG']?['quantity']?.toStringAsFixed(2) ?? 'N/A'} ${nutrientInfo['FIBTG']?['unit'] ?? ''}'),
-                                        ),
-                                        ListTile(
-                                          contentPadding: EdgeInsets.zero,
-                                          dense: true,
-                                          visualDensity: VisualDensity(
-                                              horizontal: -4,
-                                              vertical:
-                                                  -4), // Decrease the spacing
-                                          leading: Icon(
-                                              Icons.fiber_manual_record,
-                                              color: const Color.fromARGB(
-                                                  255, 84, 88, 84),
-                                              size: 10.0),
-                                          title: Text(
-                                              'Protein: ${nutrientInfo['PROCNT']?['quantity']?.toStringAsFixed(2) ?? 'N/A'} ${nutrientInfo['PROCNT']?['unit'] ?? ''}'),
-                                        ),
-                                        ListTile(
-                                          contentPadding: EdgeInsets.zero,
-                                          dense: true,
-                                          visualDensity: VisualDensity(
-                                              horizontal: -4,
-                                              vertical:
-                                                  -4), // Decrease the spacing
-                                          leading: Icon(
-                                              Icons.fiber_manual_record,
-                                              color: const Color.fromARGB(
-                                                  255, 84, 88, 84),
-                                              size: 10.0),
-                                          title: Text(
-                                              'Cholesterol: ${nutrientInfo['CHOLE']?['quantity']?.toStringAsFixed(2) ?? 'N/A'} ${nutrientInfo['CHOLE']?['unit'] ?? ''}'),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                        Map<String, dynamic> nutrientInfo = snapshot.data!;
+                        double caloriesPer100g =
+                            nutrientInfo['ENERC_KCAL']?['quantity'] ?? 0.0;
+                        double servingSize =
+                            100.0; // Example serving size in grams, adjust as needed
+                        double caloriesPerServing = calculateCaloriesPerServing(
+                            caloriesPer100g, servingSize);
+                        return Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10.0),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color.fromARGB(155, 117, 167, 126),
+                                offset: Offset(
+                                  5.0,
+                                  5.0,
                                 ),
-                              ),
+                                blurRadius: 8.0,
+                                spreadRadius: 1.5,
+                              ), //BoxShadow
+                              BoxShadow(
+                                color: Color(0xFFD2E7D2),
+                                offset: Offset(0.0, 0.0),
+                                blurRadius: 0.0,
+                                spreadRadius: 0.0,
+                              ), //BoxShadow
                             ],
+                            border: Border.all(color: Colors.transparent),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                  SizedBox(height: 20),
-                  Container(
-                    color: Color.fromRGBO(210, 231, 210,
-                        100), // Set the color for the serving quantity box
-
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Ingredients- $totalIngredients',
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color.fromARGB(255, 10, 7, 7)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color.fromARGB(155, 117, 167, 126),
-                          offset: Offset(
-                            5.0,
-                            5.0,
-                          ),
-                          blurRadius: 8.0,
-                          spreadRadius: 1.5,
-                        ), //BoxShadow
-                        BoxShadow(
-                          color: Color(0xFFD2E7D2),
-                          offset: Offset(0.0, 0.0),
-                          blurRadius: 0.0,
-                          spreadRadius: 0.0,
-                        ), //BoxShadow
-                      ],
-                      border: Border.all(color: Colors.transparent),
-                    ), // Set the color for the ingredient list box
-                    padding: EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Quantity for $servings Serving',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: const Color.fromARGB(255, 21, 12, 12),
-                              ),
+                          child: Theme(
+                            data: ThemeData(
+                              dividerColor: Colors
+                                  .transparent, // Remove the divider color
                             ),
-                            Row(
+                            child: ExpansionTile(
+                              tilePadding: EdgeInsets
+                                  .zero, // Remove the default tile padding
+                              title: Text(
+                                '  Calories: ${caloriesPerServing.toStringAsFixed(2)} kcal',
+                                style: const TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              trailing: const Icon(Icons.arrow_drop_down),
                               children: [
-                                IconButton(
-                                  icon: Icon(Icons.remove),
-                                  onPressed: () {
-                                    if (servings > 1) {
-                                      updateServings(servings - 1);
-                                    }
-                                  },
-                                ),
-                                Text(
-                                  '|',
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.add),
-                                  onPressed: () {
-                                    updateServings(servings + 1);
-                                  },
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      ListView(
+                                        shrinkWrap: true,
+                                        children: [
+                                          ListTile(
+                                            contentPadding: EdgeInsets.zero,
+                                            dense: true,
+                                            visualDensity: const VisualDensity(
+                                                horizontal: -4,
+                                                vertical:
+                                                    -4), // Decrease the spacing
+                                            leading: const Icon(
+                                                Icons.fiber_manual_record,
+                                                color: Color.fromARGB(
+                                                    255, 84, 88, 84),
+                                                size: 10.0),
+                                            title: Text(
+                                                'Fat: ${nutrientInfo['FAT']?['quantity']?.toStringAsFixed(2) ?? 'N/A'} ${nutrientInfo['FAT']?['unit'] ?? ''}'),
+                                          ),
+                                          ListTile(
+                                            contentPadding: EdgeInsets.zero,
+                                            dense: true,
+                                            visualDensity: const VisualDensity(
+                                                horizontal: -4,
+                                                vertical:
+                                                    -4), // Decrease the spacing
+                                            leading: const Icon(
+                                                Icons.fiber_manual_record,
+                                                color: Color.fromARGB(
+                                                    255, 84, 88, 84),
+                                                size: 10.0),
+                                            title: Text(
+                                                'Sugar: ${nutrientInfo['SUGAR']?['quantity']?.toStringAsFixed(2) ?? 'N/A'} ${nutrientInfo['SUGAR']?['unit'] ?? ''}'),
+                                          ),
+                                          ListTile(
+                                            contentPadding: EdgeInsets.zero,
+                                            dense: true,
+                                            visualDensity: const VisualDensity(
+                                                horizontal: -4,
+                                                vertical:
+                                                    -4), // Decrease the spacing
+                                            leading: const Icon(
+                                                Icons.fiber_manual_record,
+                                                color: Color.fromARGB(
+                                                    255, 84, 88, 84),
+                                                size: 10.0),
+                                            title: Text(
+                                                'Carbohydrate: ${nutrientInfo['CHOCDF.net']?['quantity']?.toStringAsFixed(2) ?? 'N/A'} ${nutrientInfo['CHOCDF.net']?['unit'] ?? ''}'),
+                                          ),
+                                          ListTile(
+                                            contentPadding: EdgeInsets.zero,
+                                            dense: true,
+                                            visualDensity: const VisualDensity(
+                                                horizontal: -4,
+                                                vertical:
+                                                    -4), // Decrease the spacing
+                                            leading: const Icon(
+                                                Icons.fiber_manual_record,
+                                                color: Color.fromARGB(
+                                                    255, 84, 88, 84),
+                                                size: 10.0),
+                                            title: Text(
+                                                'Fiber: ${nutrientInfo['FIBTG']?['quantity']?.toStringAsFixed(2) ?? 'N/A'} ${nutrientInfo['FIBTG']?['unit'] ?? ''}'),
+                                          ),
+                                          ListTile(
+                                            contentPadding: EdgeInsets.zero,
+                                            dense: true,
+                                            visualDensity: const VisualDensity(
+                                                horizontal: -4,
+                                                vertical:
+                                                    -4), // Decrease the spacing
+                                            leading: const Icon(
+                                                Icons.fiber_manual_record,
+                                                color: Color.fromARGB(
+                                                    255, 84, 88, 84),
+                                                size: 10.0),
+                                            title: Text(
+                                                'Protein: ${nutrientInfo['PROCNT']?['quantity']?.toStringAsFixed(2) ?? 'N/A'} ${nutrientInfo['PROCNT']?['unit'] ?? ''}'),
+                                          ),
+                                          ListTile(
+                                            contentPadding: EdgeInsets.zero,
+                                            dense: true,
+                                            visualDensity: const VisualDensity(
+                                                horizontal: -4,
+                                                vertical:
+                                                    -4), // Decrease the spacing
+                                            leading: const Icon(
+                                                Icons.fiber_manual_record,
+                                                color: Color.fromARGB(
+                                                    255, 84, 88, 84),
+                                                size: 10.0),
+                                            title: Text(
+                                                'Cholesterol: ${nutrientInfo['CHOLE']?['quantity']?.toStringAsFixed(2) ?? 'N/A'} ${nutrientInfo['CHOLE']?['unit'] ?? ''}'),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                        SizedBox(height: 20),
-                        ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: ingredients.length,
-                          itemBuilder: (context, index) {
-                            String name = ingredients[index].id;
-                            String originalQuantity = ingredients[index]['quantity'];
-                            num originalServings = recipeSnapshot['serving'];
-                            String unit = _getUnit(ingredients[index]);
-                            Fraction qty = _parseQuantity(originalQuantity);
-                            Fraction ratio = Fraction.fromDouble(servings.toDouble() / originalServings.toDouble()); // Convert double ratio to Fraction
-                            Fraction adjustedQuantity = qty * ratio;
-
-                            return ListTile(
-                              title: Text(
-                                '$name : ${_formatQuantity(adjustedQuantity)} $unit',
-                              ),
-                              trailing: Checkbox(
-                                value: isChecked[index] ?? false,
-                                onChanged: (value) {
-                                  toggleCheckbox(index);
-                                  if (value == true) {
-                                    // Add ingredient to selectedIngredients in Firestore
-                                    _addIngredientToSelectedIngredients(name);
-                                  } else {
-                                    // Remove ingredient from selectedIngredients in Firestore
-                                    _removeIngredientFromSelectedIngredients(
-                                        name);
-                                  }
-                                },
-                                activeColor: Colors.transparent,
-                              ),
-                            );
-                          },
-                        ),
-                      ],
+                          ),
+                        );
+                      },
                     ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
+                    const SizedBox(height: 20),
+                    Container(
+                      color: const Color.fromRGBO(210, 231, 210,
+                          100), // Set the color for the serving quantity box
+
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Ingredients- $totalIngredients',
+                            style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 10, 7, 7)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10.0),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color.fromARGB(155, 117, 167, 126),
+                            offset: Offset(
+                              5.0,
+                              5.0,
+                            ),
+                            blurRadius: 8.0,
+                            spreadRadius: 1.5,
+                          ), //BoxShadow
+                          BoxShadow(
+                            color: Color(0xFFD2E7D2),
+                            offset: Offset(0.0, 0.0),
+                            blurRadius: 0.0,
+                            spreadRadius: 0.0,
+                          ), //BoxShadow
+                        ],
+                        border: Border.all(color: Colors.transparent),
+                      ), // Set the color for the ingredient list box
+                      padding: const EdgeInsets.all(13.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Flexible(
+                                // Wrap the text in a Flexible widget
+                                child: Text(
+                                  'Quantity for $servings Serving',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color.fromARGB(255, 21, 12, 12),
+                                  ),
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.remove),
+                                    onPressed: () {
+                                      if (servings > 1) {
+                                        updateServings(servings - 1);
+                                      }
+                                    },
+                                  ),
+                                  const Text(
+                                    '|',
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.add),
+                                    onPressed: () {
+                                      updateServings(servings + 1);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: ingredients.length,
+                            itemBuilder: (context, index) {
+                              String name = ingredients[index].id;
+                              String originalQuantity =
+                                  ingredients[index]['quantity'];
+                              num originalServings = recipeSnapshot['serving'];
+                              String unit = _getUnit(ingredients[index]);
+                              Fraction qty = _parseQuantity(originalQuantity);
+                              Fraction ratio = Fraction.fromDouble(servings
+                                      .toDouble() /
+                                  originalServings
+                                      .toDouble()); // Convert double ratio to Fraction
+                              Fraction adjustedQuantity = qty * ratio;
+
+                              return ListTile(
+                                title: Text(
+                                  '$name : ${_formatQuantity(adjustedQuantity)} $unit',
+                                ),
+                                trailing: Checkbox(
+                                  value: isChecked[index] ?? false,
+                                  onChanged: (value) {
+                                    toggleCheckbox(index);
+                                    if (value == true) {
+                                      // Add ingredient to selectedIngredients in Firestore
+                                      _addIngredientToSelectedIngredients(name);
+                                    } else {
+                                      // Remove ingredient from selectedIngredients in Firestore
+                                      _removeIngredientFromSelectedIngredients(
+                                          name);
+                                    }
+                                  },
+                                  activeColor: Colors.transparent,
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Fraction _parseQuantity(String quantity) {
-  // Implement your logic to parse the quantity string into a Fraction
-  // For example, if the quantity is in the format 'x y/z', you can do:
-  List<String> parts = quantity.split(' ');
-  if (parts.length == 2) {
-    int whole = int.parse(parts[0]);
-    Fraction fraction = Fraction.fromString(parts[1]);
-    return Fraction(whole) + fraction;
-  } else {
-    return Fraction.fromString(quantity);
-  }
-}
-String _formatQuantity(Fraction quantity) {
-  if (quantity.numerator == 0) {
-    return '0'; // Return '0' for zero quantities
-  } else if (quantity.numerator < quantity.denominator) {
-    return '${quantity.numerator}/${quantity.denominator}'; // Return proper fractions as is
-  } else {
-    int whole = quantity.numerator ~/ quantity.denominator;
-    int remainderNumerator = quantity.numerator % quantity.denominator;
-    
-    // Reduce the fraction if possible
-    int gcd = _gcd(remainderNumerator, quantity.denominator);
-    remainderNumerator ~/= gcd;
-    int denominator = quantity.denominator ~/ gcd;
-    
-    if (remainderNumerator == 0) {
-      return '$whole'; // Return whole number if there's no remainder
+    // Implement your logic to parse the quantity string into a Fraction
+    // For example, if the quantity is in the format 'x y/z', you can do:
+    List<String> parts = quantity.split(' ');
+    if (parts.length == 2) {
+      int whole = int.parse(parts[0]);
+      Fraction fraction = Fraction.fromString(parts[1]);
+      return Fraction(whole) + fraction;
     } else {
-      return '$whole ${remainderNumerator}/${denominator}'; // Return reduced mixed fraction
+      return Fraction.fromString(quantity);
     }
   }
-}
+
+  String _formatQuantity(Fraction quantity) {
+    if (quantity.numerator == 0) {
+      return '0'; // Return '0' for zero quantities
+    } else if (quantity.numerator < quantity.denominator) {
+      int gcd = _gcd(quantity.numerator, quantity.denominator);
+    int numerator = quantity.numerator ~/ gcd;
+    int denominator = quantity.denominator ~/ gcd;
+    return '${numerator}/${denominator}';  // Return proper fractions as is
+    } else {
+      int whole = quantity.numerator ~/ quantity.denominator;
+      int remainderNumerator = quantity.numerator % quantity.denominator;
+
+      // Reduce the fraction if possible
+      int gcd = _gcd(remainderNumerator, quantity.denominator);
+      remainderNumerator ~/= gcd;
+      int denominator = quantity.denominator ~/ gcd;
+
+      if (remainderNumerator == 0) {
+        return '$whole'; // Return whole number if there's no remainder
+      } else {
+        return '$whole ${remainderNumerator}/${denominator}'; // Return reduced mixed fraction
+      }
+    }
+  }
 
 // Helper function to calculate the greatest common divisor (GCD)
-int _gcd(int a, int b) {
-  while (b != 0) {
-    var temp = b;
-    b = a % b;
-    a = temp;
+  int _gcd(int a, int b) {
+    while (b != 0) {
+      var temp = b;
+      b = a % b;
+      a = temp;
+    }
+    return a;
   }
-  return a;
-}
 
   String _getUnit(QueryDocumentSnapshot ingredient) {
     final data = ingredient.data() as Map<String, dynamic>?;
@@ -930,8 +949,8 @@ int _gcd(int a, int b) {
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFFD1E7D2)),
+          return const CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD1E7D2)),
             strokeWidth: 2.0,
           );
         }
@@ -939,7 +958,7 @@ int _gcd(int a, int b) {
           return Text('Error: ${snapshot.error}');
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Text('No steps found');
+          return const Text('No steps found');
         }
 
         List<QueryDocumentSnapshot> steps = snapshot.data!.docs;
@@ -959,14 +978,15 @@ int _gcd(int a, int b) {
                 alignment: Alignment.topLeft,
                 child: Text(
                   'Step ${currentPageIndex + 1}:',
-                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 20.0, fontWeight: FontWeight.bold),
                 ),
               ),
-              SizedBox(height: 10.0),
+              const SizedBox(height: 10.0),
               Row(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.arrow_back_ios),
+                    icon: const Icon(Icons.arrow_back_ios),
                     onPressed: () {
                       if (currentPageIndex > 0) {
                         updateCurrentPageIndex(currentPageIndex - 1);
@@ -978,11 +998,11 @@ int _gcd(int a, int b) {
                       height:
                           300.0, // Set the desired height for the description box
                       child: Container(
-                        padding: EdgeInsets.all(10.0),
+                        padding: const EdgeInsets.all(10.0),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10.0),
                           boxShadow: [
-                            BoxShadow(
+                            const BoxShadow(
                               color: Color.fromARGB(155, 117, 167, 126),
                               offset: Offset(
                                 2.0,
@@ -991,7 +1011,7 @@ int _gcd(int a, int b) {
                               blurRadius: 8.0,
                               spreadRadius: 1.5,
                             ), //BoxShadow
-                            BoxShadow(
+                            const BoxShadow(
                               color: Color(0xFFD2E7D2),
                               offset: Offset(0.0, 0.0),
                               blurRadius: 0.0,
@@ -1003,14 +1023,14 @@ int _gcd(int a, int b) {
                         child: Center(
                           child: Text(
                             currentStep,
-                            style: TextStyle(fontSize: 18.0),
+                            style: const TextStyle(fontSize: 18.0),
                           ),
                         ),
                       ),
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.arrow_forward_ios),
+                    icon: const Icon(Icons.arrow_forward_ios),
                     onPressed: () {
                       if (currentPageIndex < steps.length - 1) {
                         updateCurrentPageIndex(currentPageIndex + 1);
@@ -1019,7 +1039,7 @@ int _gcd(int a, int b) {
                   ),
                 ],
               ),
-              SizedBox(height: 20.0),
+              const SizedBox(height: 20.0),
             ],
           ),
         );
@@ -1039,7 +1059,7 @@ int _gcd(int a, int b) {
                 .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator(
+                return const CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(
                       Color.fromARGB(255, 209, 231, 210)),
                   strokeWidth: 2.0,
@@ -1049,7 +1069,7 @@ int _gcd(int a, int b) {
                 return Text('Error: ${snapshot.error}');
               }
               if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return Center(child: Text('No comments yet'));
+                return const Center(child: Text('No comments yet'));
               }
 
               List<QueryDocumentSnapshot> comments = snapshot.data!.docs;
@@ -1065,9 +1085,9 @@ int _gcd(int a, int b) {
                     builder: (context, userSnapshot) {
                       if (userSnapshot.connectionState ==
                           ConnectionState.waiting) {
-                        return CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              const Color(0xFFD1E7D2)),
+                        return const CircularProgressIndicator(
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Color(0xFFD1E7D2)),
                           strokeWidth: 2.0,
                         );
                       }
@@ -1075,7 +1095,7 @@ int _gcd(int a, int b) {
                         return Text('Error: ${userSnapshot.error}');
                       }
                       if (!userSnapshot.hasData || userSnapshot.data == null) {
-                        return SizedBox(); // Placeholder for loading state
+                        return const SizedBox(); // Placeholder for loading state
                       }
 
                       var userData = userSnapshot.data!;
@@ -1089,9 +1109,9 @@ int _gcd(int a, int b) {
                           builder: (context, urlSnapshot) {
                             if (urlSnapshot.connectionState ==
                                 ConnectionState.waiting) {
-                              return CircularProgressIndicator(
+                              return const CircularProgressIndicator(
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                    const Color(0xFFD1E7D2)),
+                                    Color(0xFFD1E7D2)),
                                 strokeWidth: 2.0,
                               );
                             } else if (urlSnapshot.hasError) {
@@ -1122,9 +1142,9 @@ int _gcd(int a, int b) {
                 future: SharedPreferences.getInstance(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator(
+                    return const CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        const Color(0xFFD1E7D2),
+                        Color(0xFFD1E7D2),
                       ),
                       strokeWidth: 2.0,
                     );
@@ -1144,9 +1164,9 @@ int _gcd(int a, int b) {
                       builder: (context, userSnapshot) {
                         if (userSnapshot.connectionState ==
                             ConnectionState.waiting) {
-                          return CircularProgressIndicator(
+                          return const CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              const Color(0xFFD1E7D2),
+                              Color(0xFFD1E7D2),
                             ),
                             strokeWidth: 2.0,
                           );
@@ -1155,7 +1175,7 @@ int _gcd(int a, int b) {
                         } else if (!userSnapshot.hasData ||
                             !userSnapshot.data!.exists) {
                           // Handle case where user document is not found
-                          return Text('User not found');
+                          return const Text('User not found');
                         } else {
                           var userData = userSnapshot.data!.data();
                           String currentUserProfilePic = userData?[
@@ -1168,9 +1188,9 @@ int _gcd(int a, int b) {
                             builder: (context, urlSnapshot) {
                               if (urlSnapshot.connectionState ==
                                   ConnectionState.waiting) {
-                                return CircularProgressIndicator(
+                                return const CircularProgressIndicator(
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    const Color(0xFFD1E7D2),
+                                    Color(0xFFD1E7D2),
                                   ),
                                   strokeWidth: 2.0,
                                 );
@@ -1190,7 +1210,7 @@ int _gcd(int a, int b) {
                   }
                 },
               ),
-              SizedBox(width: 8.0),
+              const SizedBox(width: 8.0),
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
@@ -1205,7 +1225,7 @@ int _gcd(int a, int b) {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
                           child: TextFormField(
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               hintText: 'Write your comment...',
                               border: InputBorder.none,
                             ),
@@ -1215,7 +1235,7 @@ int _gcd(int a, int b) {
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.send),
+                        icon: const Icon(Icons.send),
                         onPressed: () async {
                           SharedPreferences prefs =
                               await SharedPreferences.getInstance();
