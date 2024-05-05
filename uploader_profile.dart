@@ -1,10 +1,12 @@
 import 'package:cookitup/recipe_details.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cookitup/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cookitup/connections.dart';
 
 class UploaderProfilePage extends StatefulWidget {
   final String email;
@@ -81,7 +83,7 @@ Widget build(BuildContext context) {
     future:_getCurrentUserEmail(),
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
-        return CircularProgressIndicator();
+        return CircularProgressIndicator(color: Colors.green[100]);
       } else if (snapshot.hasError) {
         return Text('Error: ${snapshot.error}');
       } else {
@@ -106,7 +108,7 @@ Widget build(BuildContext context) {
                   future: _fetchProfilePictureUrl(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CircularProgressIndicator();
+                      return CircularProgressIndicator(color: Colors.green[100]);
                     } else if (snapshot.hasError) {
                       return Text('Error: ${snapshot.error}');
                     } else {
@@ -153,75 +155,111 @@ Widget build(BuildContext context) {
                   ],
                 ),
                 SizedBox(height: 10),
-                Text(
-                  '$_followers Followers .$_following Following $_video Videos ',
-                  style: TextStyle(fontSize: 16),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '$_followers Followers.  ',
+                        style: TextStyle(
+                          fontSize: 16,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FollowersListPage(email: widget.email),
+                              ),
+                            );
+                          },
+                      ),
+                      
+                      TextSpan(
+                        text: '$_following Following.  ',
+                        style: TextStyle(
+                          fontSize: 16,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FollowingListPage(email: widget.email),
+                              ),
+                            );
+                          },
+                      ),
+                    
+                      TextSpan(text: '$_video Videos'),
+                    ],
+                  ),
                 ),
+
                 SizedBox(height: 20),
     
                 Container(
                   margin: EdgeInsets.symmetric(vertical: 20),
                   child: ElevatedButton(
                     onPressed: () async {
-                      try {
-                        String? currentUserEmail = await _getCurrentUserEmail();
-                        if (currentUserEmail != null) {
-                          final userRef = FirebaseFirestore.instance.collection('users');
+  try {
+    String? currentUserEmail = await _getCurrentUserEmail();
+    if (currentUserEmail != null) {
+      final userRef = FirebaseFirestore.instance.collection('users');
 
-                          if (_isFollowing) {
-                            // Unfollow logic
-                            await userRef
-                                .doc(currentUserEmail)
-                                .collection('following')
-                                .doc(widget.email)
-                                .delete();
+      if (_isFollowing) {
+        // Unfollow logic
+        await userRef
+            .doc(currentUserEmail)
+            .collection('following')
+            .doc(widget.email)
+            .delete();
 
-                            await userRef.doc(widget.email).update({'followers': FieldValue.increment(-1)});
-                            await userRef.doc(currentUserEmail).update({'following': FieldValue.increment(-1)});
-                            // Remove current user from profile user's followers
-                            await userRef
-                                .doc(widget.email)
-                                .collection('followers')
-                                .doc(currentUserEmail)
-                                .delete();
+        await userRef.doc(widget.email).update({'followers': FieldValue.increment(-1)});
+        await userRef.doc(currentUserEmail).update({'following': FieldValue.increment(-1)});
+        // Remove current user from profile user's followers
+        await userRef
+            .doc(widget.email)
+            .collection('followers')
+            .doc(currentUserEmail)
+            .delete();
 
-                            setState(() {
-                              _isFollowing = false;
-                              _followers--;
-                              _following--;
-                            });
-                          } else {
-                            // Follow logic
-                            await userRef
-                                .doc(currentUserEmail)
-                                .collection('following')
-                                .doc(widget.email)
-                                .set({});
+        setState(() {
+          _isFollowing = false;
+          _followers--;
+          
+        });
+      } else {
+        // Follow logic
+        await userRef
+            .doc(currentUserEmail)
+            .collection('following')
+            .doc(widget.email)
+            .set({});
 
-                            await userRef.doc(widget.email).update({'followers': FieldValue.increment(1)});
-                            await userRef.doc(currentUserEmail).update({'following': FieldValue.increment(1)});
+        await userRef.doc(widget.email).update({'followers': FieldValue.increment(1)});
+        await userRef.doc(currentUserEmail).update({'following': FieldValue.increment(1)});
 
+        // Add current user to profile user's followers
+        await userRef
+            .doc(widget.email)
+            .collection('followers')
+            .doc(currentUserEmail)
+            .set({});
 
-                            // Add current user to profile user's followers
-                            await userRef
-                                .doc(widget.email)
-                                .collection('followers')
-                                .doc(currentUserEmail)
-                                .set({});
+        setState(() {
+          _isFollowing = true;
+         
+          _following++;
+        });
+      }
+    } else {
+      print('Current user email is null');
+    }
+  } catch (error) {
+    print('Error toggling following status: $error');
+  }
+},
 
-                            setState(() {
-                              _isFollowing = true;
-                              _followers++;
-                              _following++;
-                            });
-                          }
-                        } else {
-                          print('Current user email is null');
-                        }
-                      } catch (error) {
-                        print('Error toggling following status: $error');
-                      }
-                    },
                     style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
                         if (states.contains(MaterialState.pressed)) {
@@ -263,7 +301,7 @@ Widget build(BuildContext context) {
               future: getImageUrl(thumbnailPath),
               builder: (context, urlSnapshot) {
                 if (urlSnapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
+                  return const CircularProgressIndicator(color: Color.fromRGBO(200, 230, 201, 1));
                 } else if (urlSnapshot.hasError) {
                   return Text('Error: ${urlSnapshot.error}');
                 } else {
